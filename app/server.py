@@ -16,15 +16,14 @@ def index():
 @app.route("/upload",methods=['POST'])
 def getRamsin():
     print("entro a upload")
-    #request_data = json.loads(request.get_data())
     request_data=request.files
+    a=dict(request_data)
+    print(a.keys())
     data =request_data['json0'].read()
-    #data_prev= data.decode('utf8').replace("'", '"')
     data_json = json.loads(data)
-    #print(type(data_json))
-    #print(data_json)
     for i in range(1):
-        print(data_json[i])
+        print(data_json[i]['text'])
+
     return jsonify({'status':201}) 
 
 if __name__=="__main__":

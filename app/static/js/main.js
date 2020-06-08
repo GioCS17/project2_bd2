@@ -13,6 +13,7 @@ var v = new Vue({
         },
         upLoadAll(){
             const fd=new FormData();
+            //fd.append('files',this.selectedFiles.length,this.selectedFiles.length)
             for(i=0;i<this.selectedFiles.length;i++){
                 fd.append('json'+i,this.selectedFiles[i],this.selectedFiles[i].name)
             }
