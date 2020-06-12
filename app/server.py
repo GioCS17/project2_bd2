@@ -3,70 +3,75 @@ from flask import render_template
 from flask import request
 from flask import jsonify
 import json
-import Stemmer
-import time
+from flask_cors import CORS
+import params
+import tweepy
+from Preprocess import tokenize, stemming, pre_process
+from InvertedIndexDisk import Document, create_twitter, generate_index
 
-path = "./../"
-
+# instantiate the app
 app = Flask(__name__)
+#app.config.from_object(__name__)
 
-inverted_index = dict()
-stoplist_file="stoplist.txt"
-aditional_characters= "áéíóúÁÉÍÓÚñÑ"
-stopwords=[]
-stemmer=Stemmer.Stemmer('spanish')
-
-def loadStepWords():
-    with open(stoplist_file, 'r', encoding='utf8',errors='surrogateescape') as fdata:
-        lines = fdata.readlines();
-        for x in lines:
-            stopwords.append(x.strip())
-    stopwords.append("rt")
-    stopwords.append("ci")
-
-def clean_word(word):
-    new_word=""
-    for c in word:
-        if c=='@' or c=='#':
-            return ""
-        if 'a'<=c<='z' or 'A'<=c<='Z' or c in aditional_characters:
-            new_word+=c
-
-    return new_word.lower()
-
-def tokenize(text):
-    tokens=[]
-    #print(text)
-    text=text.split(' ')
-    for word in text:
-        word=clean_word(word)
-        if word not in stopwords and word!="":
-            tokens.append(word)
-    return tokens
-
-def stemming(tokens):
-    return stemmer.stemWords(tokens)
+path_files = './files/'
 
 
-def preprocess(data):
-    stime=time.time()
-    for ifile in data.values():
-        ifile_data=json.loads(ifile.read())
-        i =0
-        for tweet in ifile_data:
-            tokens=tokenize(tweet['text'])
-            #print(tokens)
-            stems=stemming(tokens)
-            #print(stems)
-            for stem in stems:
-                if stem in inverted_index:
-                    inverted_index[stem].add(tweet['id'])
-                else:
-                    inverted_index[stem]={tweet['id']}
-    etime=time.time()
-    print("Finish preprocess")
-    print("----%s seconds"%(etime-stime))
+# enable CORS
+#CORS(app, resources={r'/*': {'origins': '*'}})
 
+@app.route('/tweets', methods=['GET'])
+def get_all():
+    with open('./clean/tweets_2018-08-07.json', 'r') as data_file:
+        json_data = data_file.read()
+    data = json.loads(json_data)
+    return jsonify(data)
+
+
+@app.route('/tweets/<text>', methods=['GET'])
+def search_tweets(text):
+    words = open(path_files + 'words.txt', 'r').read().split('\n')
+    #in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
+    text_sep = stemming(tokenize(text))
+    documents = []
+    my_index = generate_index()
+    for word in words:
+        word_data = word.split(',')
+        if len(word_data) == 2:
+            word_index = int(word_data[0])
+            word_data = word_data[1]
+            if word_data in text_sep:
+
+                if word_index in my_index:
+                    docs_info = my_index.get(word_index)
+                    for doc_info in docs_info:
+                        if not (doc_info[0] in documents):
+                            documents.append(doc_info[0])
+    docs_json = []
+
+    auth = tweepy.OAuthHandler(params.consumer_key, params.consumer_secret)
+    auth.set_access_token(params.access_token, params.access_token_secret)
+
+    api = tweepy.API(auth)
+    datos = ['created_at']
+    user_datos = ['name', 'screen_name', 'location', 'profile_image_url']
+
+    for d in documents:
+        id = int(d)
+        try:
+            status = api.get_status(id, tweet_mode="extended")
+            s = status.__dict__
+            tweet = {'id': d, 'text': s['full_text']}
+            for d in datos:
+                if d in s:
+                    tweet[d] = s[d]
+            author = s['author'].__dict__
+            for d in user_datos:
+                if d in author:
+                    tweet[d] = author[d]
+            docs_json.append(tweet)
+        except tweepy.TweepError:
+            print("Failed to run the command on that tweet, Skipping...")
+    return jsonify(docs_json)
 
 @app.route("/")
 def index():
@@ -77,11 +82,10 @@ def index():
 def getRamsin():
     print("entro a upload")
     data = dict(request.files)
-    preprocess(data)
-
+    create_twitter(data)
+    print("hey")
 
     return jsonify({'status':201}) 
 
 if __name__=="__main__":
-    loadStepWords()
     app.run(debug=True)
