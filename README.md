@@ -1,8 +1,31 @@
+# Pre-requisitos:
+- **Pip**
+	 - sudo apt install python3-pip
+	 - pip3 --version
+- **Entorno virtual**
+	 - pip3 install virtualenv
+	 - which virtualenv
+	 - virtualenv -p #name_file_virtual
+	 - source #name_file_virtual/bin/activate
+- **Flask**
+	- pip install Flask
+- **Cython**
+	- pip install Cython
+- **Stemmer**
+	- pip install PyStemmer
 
+- **Tweepy**
+	- pip install tweepy
 
 # Division del proyecto 
 
-Dentro de la implementacion hemos decidido dividir procesamiento en el servidor en 4 archivos python cuales son los siguientes:
+## Frontend
+
+Para la implementación en frontend hacemos uso de las librerias **bulma css** para manejar el aspectos de las vistas de forma muy flexible y ligera, y **Vuejs** para el manejo de eventos y acciones desde las vista. Vuejs permite la comunicacion de las vistas con tu archivo o código javascript de forma muy fácil. Para la comunicación con el backend nos apoyamos de la libreria **axios**. Solo contamos con un archivo *index.html* para la carga de archivos json por el usuario y para la consulta previa de los tweets bajo un ingreso de alguna query en lenguaje natural. Al final del documento probar apreciar algunas imagenes que muestra como se encuentra index.html.  
+
+## Backend
+
+Dentro de la implementación en backend hemos decidido dividir el procesamiento en el servidor en 4 archivos python cuales son los siguientes:
 
 ## InvertedIndexDisk
 
@@ -17,27 +40,30 @@ En este archivo guardamos las funciones para generar un Inverted Index en disco.
 - **GenerateIndex**: Con esta función cargamos el índice invertido a memoria principal y lo almacenamos en un diccionario, además también recibimos el número de tweets.
 
 ## Params
-En este archivo cargamos los parámetros para poder trabajar con el app de Twitter.
+En este archivo cargamos los parámetros para poder trabajar con el app de Twitter. Es necesario contar con una cuenta de tweeter y copiar el token que te suministra el aplicativo para poder usar el api.
 
 ## Preprocess
-Este archivo cuenta con 5 variables globales:
-- inverted_index: para mantener el indice invertido que se genera al cargar los archivos tweeters.
-- stop_file: define la ruta del archivo desde donde carga los stopwords.
-- aditional_characters: variable string auxiliar que nos permite trabajar con comodidad en el filtro de characteres especiales.
-- stemmer: instancia que se genera de la libreria Stemmer para poder lematizar las palabras del atributo text en tweeters.
-- stopwords: arreglo que almacena todas las palabras que son stopwords y se encuentran almacenadas en el archivo definido en la ruta stop_file.
+Este archivo nos permitira hacer la limpieza y preparacion del contenido en el atributo text en cada tweeter. Para ello, se hace uso de 5 variables globales y 5 funciones.
 
-Tambien se define 5 funciones:
+Las 5 variables globales son las siguientes:
+- **inverted_index**: para mantener el indice invertido que se genera al cargar los archivos tweeters.
+- **stop_file**: define la ruta del archivo desde donde carga los stopwords.
+- **aditional_characters**: variable string auxiliar que nos permite trabajar con comodidad en el filtro de characteres especiales.
+- **stemmer**: instancia que se genera de la libreria Stemmer para poder lematizar las palabras del atributo text en tweeters.
+- **stopwords**: arreglo que almacena todas las palabras que son stopwords y se encuentran almacenadas en el archivo definido en la ruta *stop_file*.
+
+Las 5 funciones funciones que cuenta son las siguientes:
 ### load_step_words
-Este metodo permite hacer la carga de stopwords desde el archivo con ruta definida en stop_file. Los stopwords son almacenados en memoria local mediante un array.
+Este función permite hacer la carga de stopwords desde el archivo con ruta definida en *stop_file*. Los stopwords son almacenados en memoria local mediante un array.
 
 ### clean_word
-Este metodo permite limpiar cada palabra que se le envie, devolviendo una palabra sin caracteres especiales ni espacios en los extremos. Su uso esprimariamente para el proceso de tokenizar las palabras.
+Este función permite limpiar cada palabra que se le envie, devolviendo una palabra sin caracteres especiales ni espacios en los extremos. Su uso es principalmente para el proceso de tokenizar las palabras.
 
 ### tokenize
-Este metodo permite generar un array de palabras del atributo text para cada tweeters. Devuelve un array de palabras limpias y para ello hace uso del metodo clean_word. Su proceso se da mediante un for recorriendo cada palabra del atributo text y a medida que se recorre se envia la palabra a clean_word para limpieza, luego se verifica la longitud y si no pertenece a un stopword. Si su longitud es mayor a 0 y no esta dentro del arreglo stopwords se inserta al arreglo que luego retornara al finalizar el for. 
+Este función permite generar un array de palabras del atributo text para cada tweeters. Devuelve un array de palabras limpias y para ello hace uso del metodo clean_word. Su proceso se da mediante un for recorriendo cada palabra del atributo text y a medida que se recorre se envia la palabra a clean_word para limpieza, luego se verifica la longitud y si no pertenece a un stopword. Si su longitud es mayor a 0 y no esta dentro del arreglo stopwords se inserta al arreglo que luego retornara al finalizar el for. 
 
 ### stemming
+Este función permite generar las raíces de los tokens generados por la función *tokenize*. Se sabe que las raíces entre algunas palabras son las mismas y es con las raíces que al final trabajaremos para generar el índice. Para generar la raíces se apoya de la librería Stemmer mediante la funcion **stemWords**. Además es necesario previamente al crear la instancia de Stemmer, definir que idioma se usara, en nuestro caso *spanish*.
 
 
 ## Server
