@@ -24,13 +24,14 @@ class InvertedIndex:
         self.size_words=0
         self.filename = 'initial.txt'
         self.runs_files = 0
+        self.tweets = 0
 
     def process(self, documents):
         print("Start Process")
         stime = time.time()
         file = open(path_files + self.filename, 'w')
         file_words = open(path_files + 'words.txt', 'w')
-        len_wordsFile=0
+        self.tweets = len(documents)
         for d in documents:
             text = stemming(tokenize(d.text))
             words_doc = []
@@ -113,7 +114,7 @@ def create_twitter(data):
     ii.process(docs)
     ii.sort_runs(1000)
     ii.merging()
-    return "created"
+    return ii.tweets
 
 
 def generate_index():

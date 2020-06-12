@@ -15,6 +15,7 @@ app = Flask(__name__)
 #app.config.from_object(__name__)
 
 path_files = './files/'
+total_tweets = 1000
 
 
 # enable CORS
@@ -33,7 +34,10 @@ def search_tweets(text):
     text_sep = stemming(tokenize(text))
     documents = {}
     #my_index, num_docs = generate_index()
-    num_docs = 10000
+    try:
+        num_docs = total
+    except:
+        num_docs = total_tweets
     with open(path_files + 'final.txt') as f:
         content = f.read()
         f.seek(0)
@@ -99,13 +103,15 @@ def index():
 def getRamsin():
     print("entro a upload")
     data = dict(request.files)
-    create_twitter(data)
-    global my_index
-    global num_docs
-    my_index, num_docs = generate_index()
+    total_tweets = create_twitter(data)
+    #global my_index
+    #global num_docs
+    global total
+    total = total_tweets
+    #my_index, num_docs = generate_index()
     print("hey")
 
-    return jsonify({'status': 201})
+    return jsonify({'status': 201, 'total' : total_tweets})
 
 
 if __name__=="__main__":

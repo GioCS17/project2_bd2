@@ -3,6 +3,7 @@ var v = new Vue({
     el:'#app',
     data:{
         selectedFiles:[],
+        totalTweets: 0,
         text:'',
         msg:[],
         spinner : false,
@@ -16,6 +17,7 @@ var v = new Vue({
         },
         async upLoadAll(){
             this.spinner2 = true
+            let newtotal = 0
             const fd = new FormData();
             //fd.append('files',this.selectedFiles.length,this.selectedFiles.length)
             for(i=0;i<this.selectedFiles.length;i++){
@@ -24,7 +26,12 @@ var v = new Vue({
             var url='http://127.0.0.1:5000/upload';
             await axios.post(url,fd)
             .then(function(res){
-                if(res.status==201)
+                console.log(res.data)
+                console.log(res.data.total)
+                this.totalTweets = res.data.total
+                newtotal = res.data.total
+                console.log(this.totalTweets)
+                if(res.data.status==201)
                     console.log("exitos")
                 })
             .catch(function(err){
@@ -34,6 +41,7 @@ var v = new Vue({
                 console.log("Finish")
             })
             this.spinner2 = false
+            this.totalTweets = newtotal
         },
         async search(to_search) {
             console.log("consulta entro a search")
