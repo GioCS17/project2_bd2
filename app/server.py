@@ -20,10 +20,14 @@ path_files = './files/'
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
 
+my_index={}
+num_docs = 0
 
 @app.route('/tweets/<text>', methods=['GET'])
 def search_tweets(text):
     print("start searching")
+    global my_index
+    global num_docs
     words = open(path_files + 'words.txt', 'r').read().split('\n')
     #in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
     text_sep = stemming(tokenize(text))
@@ -39,13 +43,17 @@ def search_tweets(text):
                 word_index = int(word_data[0])
                 word_data = word_data[1]
                 if word_data in text_sep:
-                    print(word_index)
-                    idx = content.index('\n' + str(word_index) + ',') + 1
-                    idx_next = content.index('\n' + str(word_index + 1) + ',') + 1
-                    content_word = content[idx:idx_next]
-                    print("before")
-                    print(content_word.split('\n'))
-                    print("end")
+                    if word_index == 1:
+                        idx = 0
+                    else:
+                        idx = content.index('\n' + str(word_index) + ',') + 1
+
+                    if word_index >= len(words) - 1:
+                        content_word = content[idx:]
+                    else:
+                        idx_next = content.index('\n' + str(word_index + 1) + ',') + 1
+                        content_word = content[idx:idx_next]
+
                     idf = math.log((num_docs / (len(content_word.split('\n')))), 10)
                     for ind in content_word.split('\n'):
                         if len(ind) > 1:
@@ -57,7 +65,6 @@ def search_tweets(text):
                             else:
                                 documents[data[1]] = tf_idf
 
-
     docs_json = []
 
     print("end searching")
@@ -66,11 +73,8 @@ def search_tweets(text):
     auth.set_access_token(params.access_token, params.access_token_secret)
 
     api = tweepy.API(auth)
-    datos = ['created_at']
-    user_datos = ['name', 'screen_name', 'location', 'profile_image_url']
     tweets_no_count = 0
     for d in documents:
-        print(d)
         id = int(d)
         score = documents[d]
         try:
@@ -96,6 +100,9 @@ def getRamsin():
     print("entro a upload")
     data = dict(request.files)
     create_twitter(data)
+    global my_index
+    global num_docs
+    my_index, num_docs = generate_index()
     print("hey")
 
     return jsonify({'status': 201})

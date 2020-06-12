@@ -21,6 +21,7 @@ class Document:
 class InvertedIndex:
     def __init__(self):
         self.words = []
+        self.size_words=0
         self.filename = 'initial.txt'
         self.runs_files = 0
 
@@ -29,17 +30,17 @@ class InvertedIndex:
         stime = time.time()
         file = open(path_files + self.filename, 'w')
         file_words = open(path_files + 'words.txt', 'w')
+        len_wordsFile=0
         for d in documents:
-            #text = d.text.replace(',', '').split(" ")
             text = stemming(tokenize(d.text))
             words_doc = []
             for t in text:
-                t = t
-                if not (t in words_doc):
+                if t not in words_doc:
                     words_doc.append(t)
-                    if not (t in self.words):
+                    if t not in self.words:
                         self.words.append(t)
-                        file_words.write(str(self.words.index(t) + 1) + ',' + str(t) + '\n')
+                        self.size_words+=1
+                        file_words.write(str(self.size_words) + ',' + str(t) + '\n')
                     idx = self.words.index(t)
                     f = text.count(t)
                     file.write(str(idx + 1) + ',' + str(d.id) + ',' + str(f) + '\n')
@@ -102,19 +103,15 @@ def create_twitter(data):
 
 
     load_step_words()
-    #path = './clean/'
-    #archivos = [obj for obj in listdir(path) if isfile(path + obj)]
     docs = []
-    stime = time.time()
     for ifile in data.values():
         ifile_data = json.loads(ifile.read())
-        i = 0
         for tweet in ifile_data:
             new_doc = Document(tweet["text"], tweet["id"])
             docs.append(new_doc)
     ii = InvertedIndex()
     ii.process(docs)
-    ii.sort_runs(200)
+    ii.sort_runs(1000)
     ii.merging()
     return "created"
 
