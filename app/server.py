@@ -18,11 +18,12 @@ path_files = './files/'
 
 
 # enable CORS
-#CORS(app, resources={r'/*': {'origins': '*'}})
+CORS(app, resources={r'/*': {'origins': '*'}})
 
 
 @app.route('/tweets/<text>', methods=['GET'])
 def search_tweets(text):
+    print("start searching")
     words = open(path_files + 'words.txt', 'r').read().split('\n')
     #in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
     text_sep = stemming(tokenize(text))
@@ -49,31 +50,28 @@ def search_tweets(text):
 
     docs_json = []
 
+    print("end searching")
+
     auth = tweepy.OAuthHandler(params.consumer_key, params.consumer_secret)
     auth.set_access_token(params.access_token, params.access_token_secret)
 
     api = tweepy.API(auth)
     datos = ['created_at']
     user_datos = ['name', 'screen_name', 'location', 'profile_image_url']
-
+    tweets_no_count = 0
     for d in documents:
         id = int(d)
         score = documents[d]
         try:
             status = api.get_status(id, tweet_mode="extended")
             s = status.__dict__
-            tweet = {'id': d, 'text': s['full_text']}
-            for d in datos:
-                if d in s:
-                    tweet[d] = s[d]
             author = s['author'].__dict__
-            for d in user_datos:
-                if d in author:
-                    tweet[d] = author[d]
-            tweet['score'] = score
+            tweet = {'id': id, 'text': s['full_text'], 'created_at': s['created_at'], 'name': author['name'],
+                     'screen_name': author['screen_name'], 'location': author['location'],
+                     'profile_image_url': author['profile_image_url'], 'score': score}
             docs_json.append(tweet)
         except tweepy.TweepError:
-            print("Failed to run the command on that tweet, Skipping...")
+            tweets_no_count += 1
     return jsonify(docs_json)
 
 

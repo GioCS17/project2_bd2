@@ -5,7 +5,8 @@ var v = new Vue({
         selectedFiles:[],
         text:'',
         msg:[],
-        spinner : false
+        spinner : false,
+        spinner2 : false
     },
     methods: {
         clearSearchField(){
@@ -13,14 +14,15 @@ var v = new Vue({
         upSelectedFiles(event){
             this.selectedFiles=event.target.files;
         },
-        upLoadAll(){
-            const fd=new FormData();
+        async upLoadAll(){
+            this.spinner2 = true
+            const fd = new FormData();
             //fd.append('files',this.selectedFiles.length,this.selectedFiles.length)
             for(i=0;i<this.selectedFiles.length;i++){
                 fd.append('json'+i,this.selectedFiles[i],this.selectedFiles[i].name)
             }
             var url='http://127.0.0.1:5000/upload';
-            axios.post(url,fd)
+            await axios.post(url,fd)
             .then(function(res){
                 if(res.status==201)
                     console.log("exitos")
@@ -31,20 +33,22 @@ var v = new Vue({
             .then(function(){
                 console.log("Finish")
             })
+            this.spinner2 = false
         },
-        search(to_search) {
-            console.log("entro a search")
+        async search(to_search) {
+            console.log("consulta entro a search")
             this.spinner = true
             const path = 'http://localhost:5000/tweets/' + to_search;
-            axios.get(path)
+            await axios.get(path)
                 .then((res) => {
                 this.msg = res.data;
+                this.msg.sort((a,b) => (a.score < b.score) ? 1 : ((b.score < a.score) ? -1 : 0));
             })
             .catch((error) => {
             // eslint-disable-next-line
             console.error(error);
             });
-            this.spinner = false 
+            this.spinner = false
         }
     },
     computed: {
