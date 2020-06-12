@@ -20,15 +20,18 @@ path_files = './files/'
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
 
+my_index={}
+num_docs = 0
 
 @app.route('/tweets/<text>', methods=['GET'])
 def search_tweets(text):
     print("start searching")
+    global my_index
+    global num_docs
     words = open(path_files + 'words.txt', 'r').read().split('\n')
     #in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
     text_sep = stemming(tokenize(text))
     documents = {}
-    my_index, num_docs = generate_index()
     for word in words:
         word_data = word.split(',')
         if len(word_data) == 2:
@@ -85,6 +88,9 @@ def getRamsin():
     print("entro a upload")
     data = dict(request.files)
     create_twitter(data)
+    global my_index
+    global num_docs
+    my_index, num_docs = generate_index()
     print("hey")
 
     return jsonify({'status': 201})
