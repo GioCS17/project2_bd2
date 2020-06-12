@@ -2,6 +2,7 @@ from flask import Flask
 from flask import render_template 
 from flask import request
 from flask import jsonify
+import math
 import json
 from flask_cors import CORS
 import params
@@ -19,33 +20,33 @@ path_files = './files/'
 # enable CORS
 #CORS(app, resources={r'/*': {'origins': '*'}})
 
-@app.route('/tweets', methods=['GET'])
-def get_all():
-    with open('./clean/tweets_2018-08-07.json', 'r') as data_file:
-        json_data = data_file.read()
-    data = json.loads(json_data)
-    return jsonify(data)
-
 
 @app.route('/tweets/<text>', methods=['GET'])
 def search_tweets(text):
     words = open(path_files + 'words.txt', 'r').read().split('\n')
     #in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
     text_sep = stemming(tokenize(text))
-    documents = []
-    my_index = generate_index()
+    documents = {}
+    my_index, num_docs = generate_index()
     for word in words:
         word_data = word.split(',')
         if len(word_data) == 2:
             word_index = int(word_data[0])
             word_data = word_data[1]
             if word_data in text_sep:
-
                 if word_index in my_index:
                     docs_info = my_index.get(word_index)
+                    idf = math.log((num_docs / (len(docs_info))), 10)
                     for doc_info in docs_info:
-                        if not (doc_info[0] in documents):
-                            documents.append(doc_info[0])
+                        tf = math.log(1 + doc_info[1], 10)
+                        tf_idf = tf * idf
+                        if doc_info[0] in documents:
+                            documents[doc_info[0]] += tf_idf
+                        else:
+                            documents[doc_info[0]] = tf_idf
+                        #if not (doc_info[0] in documents):
+                         #   documents.append(doc_info[0])
+
     docs_json = []
 
     auth = tweepy.OAuthHandler(params.consumer_key, params.consumer_secret)
@@ -57,6 +58,7 @@ def search_tweets(text):
 
     for d in documents:
         id = int(d)
+        score = documents[d]
         try:
             status = api.get_status(id, tweet_mode="extended")
             s = status.__dict__
@@ -68,10 +70,12 @@ def search_tweets(text):
             for d in user_datos:
                 if d in author:
                     tweet[d] = author[d]
+            tweet['score'] = score
             docs_json.append(tweet)
         except tweepy.TweepError:
             print("Failed to run the command on that tweet, Skipping...")
     return jsonify(docs_json)
+
 
 @app.route("/")
 def index():
@@ -85,7 +89,8 @@ def getRamsin():
     create_twitter(data)
     print("hey")
 
-    return jsonify({'status':201}) 
+    return jsonify({'status': 201})
+
 
 if __name__=="__main__":
     app.run(debug=True)

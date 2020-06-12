@@ -116,6 +116,7 @@ def create_twitter(data):
 def generate_index():
     index = {}
     in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
+    docs = []
     for ind in in_ind:
         dic = ind.split(',')
         if len(dic) == 3:
@@ -123,10 +124,12 @@ def generate_index():
             doc_id = int(dic[1])
             freq = int(dic[2])
             doc_freq = (doc_id, freq)
+            if not (doc_id in docs):
+                docs.append(doc_id)
             if word_id in index:
                 index[word_id].append(doc_freq)
             else:
                 new_ind = [doc_freq]
                 index[word_id] = new_ind
 
-    return index
+    return index, len(docs)
