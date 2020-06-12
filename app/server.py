@@ -28,25 +28,35 @@ def search_tweets(text):
     #in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
     text_sep = stemming(tokenize(text))
     documents = {}
-    my_index, num_docs = generate_index()
-    for word in words:
-        word_data = word.split(',')
-        if len(word_data) == 2:
-            word_index = int(word_data[0])
-            word_data = word_data[1]
-            if word_data in text_sep:
-                if word_index in my_index:
-                    docs_info = my_index.get(word_index)
-                    idf = math.log((num_docs / (len(docs_info))), 10)
-                    for doc_info in docs_info:
-                        tf = math.log(1 + doc_info[1], 10)
-                        tf_idf = tf * idf
-                        if doc_info[0] in documents:
-                            documents[doc_info[0]] += tf_idf
-                        else:
-                            documents[doc_info[0]] = tf_idf
-                        #if not (doc_info[0] in documents):
-                         #   documents.append(doc_info[0])
+    #my_index, num_docs = generate_index()
+    num_docs = 10000
+    with open(path_files + 'final.txt') as f:
+        content = f.read()
+        f.seek(0)
+        for word in words:
+            word_data = word.split(',')
+            if len(word_data) == 2:
+                word_index = int(word_data[0])
+                word_data = word_data[1]
+                if word_data in text_sep:
+                    print(word_index)
+                    idx = content.index('\n' + str(word_index) + ',') + 1
+                    idx_next = content.index('\n' + str(word_index + 1) + ',') + 1
+                    content_word = content[idx:idx_next]
+                    print("before")
+                    print(content_word.split('\n'))
+                    print("end")
+                    idf = math.log((num_docs / (len(content_word.split('\n')))), 10)
+                    for ind in content_word.split('\n'):
+                        if len(ind) > 1:
+                            data = ind.split(',')
+                            tf = math.log(1 + int(data[2]), 10)
+                            tf_idf = tf * idf
+                            if data[1] in documents:
+                                documents[data[1]] += tf_idf
+                            else:
+                                documents[data[1]] = tf_idf
+
 
     docs_json = []
 
@@ -60,6 +70,7 @@ def search_tweets(text):
     user_datos = ['name', 'screen_name', 'location', 'profile_image_url']
     tweets_no_count = 0
     for d in documents:
+        print(d)
         id = int(d)
         score = documents[d]
         try:

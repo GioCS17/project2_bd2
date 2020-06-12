@@ -25,6 +25,8 @@ class InvertedIndex:
         self.runs_files = 0
 
     def process(self, documents):
+        print("Start Process")
+        stime = time.time()
         file = open(path_files + self.filename, 'w')
         file_words = open(path_files + 'words.txt', 'w')
         for d in documents:
@@ -43,8 +45,13 @@ class InvertedIndex:
                     file.write(str(idx + 1) + ',' + str(d.id) + ',' + str(f) + '\n')
         file_words.close()
         file.close()
+        etime = time.time()
+        print("----%s seconds" % (etime - stime))
+        print("End Process")
 
     def sort_runs(self, k):
+        print("Start Runs")
+        stime = time.time()
         file1 = open(path_files + self.filename, 'r')
         run = []
         idx_run = 1
@@ -69,8 +76,13 @@ class InvertedIndex:
             file_run.close()
             self.runs_files += 1
         file1.close()
+        etime = time.time()
+        print("----%s seconds" % (etime - stime))
+        print("End Runs")
 
     def merging(self):
+        print("Start Merge")
+        stime = time.time()
         l = []
         for i in range(self.runs_files):
             file_run = open(path_files + str(i + 1) + 'run.txt', 'r')
@@ -81,6 +93,9 @@ class InvertedIndex:
         file_final = open(path_files + "final.txt", 'w')
         file_final.write(c)
         file_final.close()
+        etime = time.time()
+        print("----%s seconds" % (etime - stime))
+        print("End Merge")
 
 
 def create_twitter(data):
@@ -97,27 +112,22 @@ def create_twitter(data):
         for tweet in ifile_data:
             new_doc = Document(tweet["text"], tweet["id"])
             docs.append(new_doc)
-    '''for arch in archivos:
-        with io.open('./clean/' + arch, 'r', encoding="utf-8") as data_file:
-            json_data = data_file.read()
-        data = json.loads(json_data)
-        for t in data:
-            new_doc = Document(t["text"], t["id"])
-            docs.append(new_doc)
-        if len(docs) > 20:
-            break'''
     ii = InvertedIndex()
     ii.process(docs)
-    ii.sort_runs(10)
+    ii.sort_runs(200)
     ii.merging()
     return "created"
 
 
 def generate_index():
+    print("Generate Index")
+    stime = time.time()
     index = {}
+    print("Reading file")
     in_ind = open(path_files + 'final.txt', 'r').read().split('\n')
     docs = []
     for ind in in_ind:
+        print(ind)
         dic = ind.split(',')
         if len(dic) == 3:
             word_id = int(dic[0])
@@ -131,5 +141,8 @@ def generate_index():
             else:
                 new_ind = [doc_freq]
                 index[word_id] = new_ind
+    etime = time.time()
+    print("----%s seconds" % (etime - stime))
+    print("Index Generated")
 
     return index, len(docs)
