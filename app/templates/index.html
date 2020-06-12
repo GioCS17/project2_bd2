@@ -39,9 +39,9 @@
             <div class="card-content">
               <div class="content">
                 <div class="control has-icons-left has-icons-right search-field">
-                  <input class="input is-large" type="text" placeholder="Searching" v-model="search" /><span class="icon is-medium is-left"><i class="fa fa-search"></i></span>
+                  <input class="input is-large" type="text" placeholder="Searching" v-model="text" @keyup.enter="search(text)" /><span class="icon is-medium is-left"><i class="fa fa-search"></i></span>
                   <span class="icon is-medium is-right">
-                    <i class="delete is-medium clear-search" @click="clearSearchField()" v-if="search.length"></i>
+                    <i class="delete is-medium clear-search" @click="clearSearchField()" v-if="text.length"></i>
                   </span>
                 </div>
               </div>
@@ -51,15 +51,15 @@
       </div>
     </section>
         <div class="box cta">
-            <h2 class="has-text-centered">RESULTS</h2>
+          <progress class="progress is-large is-info" max="100" v-if="spinner">60%</progress>
+           <h2 class="has-text-centered">RESULTS</h2>
         </div>
     <section class="container cards-container">
       <div class="columns is-centered is-multiline" id="sectioncontainer">
-          <!--
-        <div class="column is-narrow" v-for="file in files">
+        <div class="column is-narrow" v-for="(m,idx) in msg" :key="idx" :img-src="m.profile_image_url">
           <article class="message" :class="'is-' + yxy.cardColor">
             <div class="message-header">
-              <p> Twiter 1  =  Text </p>
+              <p> {[{m.name}]}  =  {[{m.text}]} </p>
               <button class="delete" aria-label="delete" @click="removeCard(yxy)"></button>
             </div>
             <div class="message-body">
@@ -69,7 +69,6 @@
             </div>
           </article>
         </div>
-          -->
       </div>
     </section>
   </div>

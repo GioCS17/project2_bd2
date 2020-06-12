@@ -2,8 +2,10 @@ Vue.options.delimiters = ['{[{', '}]}'];
 var v = new Vue({
     el:'#app',
     data:{
-        search:'',
         selectedFiles:[],
+        text:'',
+        msg:[],
+        spinner : false
     },
     methods: {
         clearSearchField(){
@@ -29,6 +31,20 @@ var v = new Vue({
             .then(function(){
                 console.log("Finish")
             })
+        },
+        search(to_search) {
+            console.log("entro a search")
+            this.spinner = true
+            const path = 'http://localhost:5000/tweets/' + to_search;
+            axios.get(path)
+                .then((res) => {
+                this.msg = res.data;
+            })
+            .catch((error) => {
+            // eslint-disable-next-line
+            console.error(error);
+            });
+            this.spinner = false 
         }
     },
     computed: {
